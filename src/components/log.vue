@@ -195,7 +195,7 @@ export default {
             this.productsData = null
 
             try {
-                const url = `${this.baseUrl}products`
+                const url = `${this.baseUrl}_view_v_products_full`
                 console.log('=== TEST API ===')
                 console.log('URL:', url)
                 console.log('Token:', token)

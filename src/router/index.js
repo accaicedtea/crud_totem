@@ -4,6 +4,7 @@ import Login from '../components/log.vue'
 import Ingredients from '../components/Ingredients.vue'
 import Allergens from '../components/Allergens.vue'
 import Categories from '../components/Categories.vue'
+import Products from '../components/Products.vue'
 const routes = [
  
    {
@@ -26,6 +27,11 @@ const routes = [
     path: '/categories',
     name: 'Categories',
     component: Categories,
+  },
+  {
+    path: '/products',
+    name: 'Products',
+    component: Products,
   }
   
 ]
