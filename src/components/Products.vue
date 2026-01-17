@@ -65,9 +65,8 @@
                 <th class="d-none d-md-table-cell">Immagine</th>
                 <th>Nome</th>
                 <th class="d-none d-lg-table-cell">Descrizione</th>
-                <th>Prezzo</th>
+                <th class="d-none d-md-table-cell">Prezzo</th>
                 <th class="d-none d-md-table-cell">Categoria</th>
-                <th class="d-none d-sm-table-cell">Stato</th>
                 <th>Azioni</th>
               </tr>
             </thead>
@@ -95,17 +94,16 @@
                   <strong class="text-success">€ {{ parseFloat(product.price).toFixed(2) }}</strong>
                 </td>
                 <td class="d-none d-md-table-cell">
-                  <span v-if="getCategoryName(product.category_id)" class="badge bg-info">
-                    {{ getCategoryName(product.category_id) }}
+                  <span 
+                    v-if="product.category_name" 
+                    class="badge"
+                    :style="{ 
+                      backgroundColor: product.category_color || '#6c757d'
+                    }"
+                  >
+                    {{ product.category_name }}
                   </span>
                   <span v-else class="text-muted">-</span>
-                </td>
-                <td class="d-none d-sm-table-cell">
-                  <span 
-                    :class="product.is_active ? 'badge bg-success' : 'badge bg-danger'"
-                  >
-                    {{ product.is_active ? 'Attivo' : 'Non attivo' }}
-                  </span>
                 </td>
                 <td>
                   <div class="btn-group">
@@ -309,6 +307,23 @@ export default {
     getAllergenName(allergenId) {
       const allergen = this.allergens.find(a => a.id === allergenId)
       return allergen ? allergen.name : ''
+    },
+    
+    getContrastColor(hexColor) {
+      if (!hexColor) return '#FFFFFF'
+      
+      // Rimuovi il # se presente
+      const hex = hexColor.replace('#', '')
+      
+      // Converti in RGB
+      const r = parseInt(hex.substr(0, 2), 16)
+      const g = parseInt(hex.substr(2, 2), 16)
+      const b = parseInt(hex.substr(4, 2), 16)
+      
+      // Calcola la luminosità
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+      
+      return luminance > 0.5 ? '#000000' : '#FFFFFF'
     },
     
     openFormModal(product = null) {

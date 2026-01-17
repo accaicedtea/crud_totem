@@ -58,6 +58,7 @@ export function transformProductFromView(apiProduct) {
     image: apiProduct.image,
     category_id: parseInt(apiProduct.category_id),
     category_name: apiProduct.category_name,
+    category_color: apiProduct.category_color,
     is_active: parseInt(apiProduct.is_available) === 1,
     is_featured: parseInt(apiProduct.is_featured) === 1,
     sort_order: 0, // non presente nella view, default
