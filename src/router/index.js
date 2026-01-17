@@ -8,7 +8,7 @@ import Products from '../components/Products.vue'
 const routes = [
  
    {
-    path: '/log',
+    path: '/',
     name: 'Log',
     component: Login,
     meta: { requiresAuth: false }

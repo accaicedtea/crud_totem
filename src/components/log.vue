@@ -1,63 +1,98 @@
 <template>
-    <div class="login">
+    <div class="login min-vh-100 d-flex align-items-center justify-content-center bg-light">
         <div class="login-container">
-            <h2>Accedi</h2>
-            
-            <div v-if="errorMessage" class="alert alert-error">
-                {{ errorMessage }}
-            </div>
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4 text-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Accedi
+                    </h2>
+                    
+                    <div v-if="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ errorMessage }}
+                    </div>
 
-            <div v-if="successMessage" class="alert alert-success">
-                {{ successMessage }}
-            </div>
+                    <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
+                    </div>
 
-            <form @submit.prevent="handleLogin">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input 
-                        v-model="email" 
-                        type="email" 
-                        id="email"
-                        placeholder="utente@example.com" 
-                        required 
-                        :disabled="loading"
-                    />
+                    <form @submit.prevent="handleLogin">
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input 
+                                    v-model="email" 
+                                    type="email" 
+                                    id="email"
+                                    class="form-control"
+                                    placeholder="utente@example.com" 
+                                    required 
+                                    :disabled="loading"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-bold">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input 
+                                    v-model="password" 
+                                    type="password" 
+                                    id="password"
+                                    class="form-control"
+                                    placeholder="Inserisci la password" 
+                                    required 
+                                    :disabled="loading"
+                                />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3" :disabled="loading">
+                            <span v-if="loading">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Accesso in corso...
+                            </span>
+                            <span v-else>
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </span>
+                        </button>
+                    </form>
+
+                    <div v-if="hasToken" class="api-test-section mt-4">
+                        <div class="card bg-light">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-flask me-2"></i>Test API</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-key me-1"></i>Token salvato: 
+                                    <code>{{ savedToken ? savedToken.substring(0, 20) + '...' : 'N/A' }}</code>
+                                </p>
+                                <button @click="testProductsAPI" class="btn btn-info w-100" :disabled="loadingProducts">
+                                    <span v-if="loadingProducts">
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Caricamento...
+                                    </span>
+                                    <span v-else>
+                                        <i class="fas fa-download me-2"></i>Carica Prodotti con Promozioni
+                                    </span>
+                                </button>
+                                
+                                <div v-if="productsData" class="mt-3">
+                                    <h6 class="text-success"><i class="fas fa-check-circle me-2"></i>Risultati API:</h6>
+                                    <div class="bg-dark text-white p-3 rounded" style="max-height: 400px; overflow-y: auto;">
+                                        <pre class="mb-0 text-white">{{ JSON.stringify(productsData, null, 2) }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4 mb-0" role="alert">
+                        <i class="fas fa-info-circle me-2"></i><strong>Token valido per:</strong> 24 ore
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        v-model="password" 
-                        type="password" 
-                        id="password"
-                        placeholder="Inserisci la password" 
-                        required 
-                        :disabled="loading"
-                    />
-                </div>
-
-                <button type="submit" :disabled="loading">
-                    <span v-if="loading">Accesso in corso...</span>
-                    <span v-else>Login</span>
-                </button>
-            </form>
-
-            <div v-if="hasToken" class="api-test-section">
-                <h3>Test API</h3>
-                <p class="token-info">Token salvato: {{ savedToken ? savedToken.substring(0, 20) + '...' : 'N/A' }}</p>
-                <button @click="testProductsAPI" :disabled="loadingProducts">
-                    <span v-if="loadingProducts">Caricamento...</span>
-                    <span v-else>Carica Prodotti con Promozioni</span>
-                </button>
-                
-                <div v-if="productsData" class="api-results">
-                    <h4>Risultati API:</h4>
-                    <pre>{{ JSON.stringify(productsData, null, 2) }}</pre>
-                </div>
-            </div>
-
-            <div class="info-box">
-                <p><strong>Token valido per:</strong> 24 ore</p>
             </div>
         </div>
     </div>
@@ -233,3 +268,44 @@ export default {
 }
 </script>
 
+<style scoped>
+.login-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+.form-control:focus {
+    border-left: none;
+    box-shadow: none;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+}
+
+pre {
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+code {
+    background-color: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+</style>
