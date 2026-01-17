@@ -1,5 +1,5 @@
 <template>
-  <div class="ingredients">
+  <div class="">
     <!-- Header -->
     <div class="row mb-4">
       <div class="col-md-6">
@@ -48,8 +48,8 @@
     </div>
 
     <!-- Ingredients Table -->
-    <div v-else class="card">
-      <div class="card-body">
+    <div v-else class="">
+      <div class="">
         <div class="table-responsive">
           <table class="table table-hover">
             <thead class="table-dark">
@@ -241,6 +241,8 @@
 </template>
 
 <script>
+import { ingredientsService } from '../services/ingredientsService'
+
 export default {
   name: 'Ingredients',
   data() {
@@ -266,80 +268,19 @@ export default {
   },
   methods: {
     async loadIngredients() {
-      console.log('=== INIZIO CARICAMENTO INGREDIENTI ===')
-      
-      const token = localStorage.getItem('token')
-      console.log('Token trovato:', token ? token.substring(0, 20) + '...' : 'NESSUN TOKEN')
-      
       this.loading = true
       
       try {
-        const baseUrl = import.meta.env.DEV ? '/api/' : 'https://thisisnotmysite.altervista.org/mymenu/api/'
-        const url = `${baseUrl}ingredients`
-        console.log('URL chiamata:', url)
+        const result = await ingredientsService.getAll()
         
-        const headers = {
-          'Content-Type': 'application/json'
-        }
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-          console.log('Header Authorization aggiunto')
-        }
-        
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: headers
-        })
-        
-        console.log('Response status:', response.status)
-        console.log('Response ok:', response.ok)
-        console.log('Response headers:', response.headers)
-        
-        // Leggi la risposta come testo prima
-        const responseText = await response.text()
-        console.log('Response TEXT:', responseText)
-        console.log('Response TEXT length:', responseText.length)
-        console.log('Response primi 500 caratteri:', responseText.substring(0, 500))
-        
-        // Prova a parsare come JSON
-        let result
-        try {
-          result = JSON.parse(responseText)
-          console.log('JSON parsing riuscito!')
-        } catch (parseError) {
-          console.error('❌ Errore parsing JSON:', parseError)
-          console.error('Response non è JSON valido!')
-          throw new Error('Risposta server non valida (non è JSON)')
-        }
-        
-        console.log('Response completa:', result)
-        console.log('Result status:', result.status)
-        console.log('Result data:', result.data)
-        
-        if (response.ok && result.status === 200) {
-          console.log('✅ Ingredienti caricati con successo!')
-          console.log('Numero ingredienti:', result.data ? result.data.length : 0)
-          
-          this.ingredients = result.data || []
-          this.filteredIngredients = this.ingredients
-          console.log('Ingredienti assegnati:', this.ingredients.length)
-        } else {
-          console.log('❌ Caricamento fallito')
-          console.log('Response status:', response.status)
-          console.log('Result:', result)
-          throw new Error(result.message || 'Errore nel caricamento degli ingredienti')
-        }
+        this.ingredients = result.data || []
+        this.filteredIngredients = this.ingredients
+        console.log('✅ Ingredienti caricati:', this.ingredients.length)
       } catch (error) {
-        console.error('❌ ERRORE CATCH:', error)
-        console.error('Error name:', error.name)
-        console.error('Error message:', error.message)
-        console.error('Error stack:', error.stack)
+        console.error('❌ Errore caricamento ingredienti:', error)
         alert('Errore nel caricamento degli ingredienti: ' + error.message)
       } finally {
         this.loading = false
-        console.log('Loading impostato a false')
-        console.log('=== FINE CARICAMENTO INGREDIENTI ===')
       }
     },
     
@@ -411,93 +352,50 @@ export default {
     
     async saveIngredient() {
       try {
-        // Recupera il token dal localStorage
-        const token = localStorage.getItem('token')
-        
-        if (!token) {
-          alert('Token mancante, devi fare login')
-          return
-        }
-        
         // Prepara il payload per l'invio
         const payload = {
           ...this.form,
           price: this.form.price.toString().replace(',', '.')
         }
         
-        // Determina URL e metodo in base alla modalità (insert o update)
-        const baseUrl = import.meta.env.DEV ? '/api/' : 'https://thisisnotmysite.altervista.org/mymenu/api/'
-        const url = this.editMode ? `${baseUrl}ingredients/${this.form.id}` : `${baseUrl}ingredients`
-        const method = this.editMode ? 'PUT' : 'POST'
+        // Usa il servizio per salvare (crea o aggiorna)
+        const result = await ingredientsService.save(payload, this.editMode)
         
-        // Fai la chiamata con il token nell'header Authorization
-        const response = await fetch(url, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`  // Importante: Bearer + token
-          },
-          body: JSON.stringify(payload)
-        })
+        // Ricarica gli ingredienti
+        await this.loadIngredients()
         
-        const result = await response.json()
+        // Chiudi il modal
+        document.querySelector('#ingredientModal [data-bs-dismiss="modal"]').click()
         
-        if (response.ok) {
-          // Ricarica gli ingredienti
-          await this.loadIngredients()
-          
-          // Chiudi il modal usando l'attributo data-bs-dismiss
-          document.querySelector('#ingredientModal [data-bs-dismiss="modal"]').click()
-          
-          // Mostra messaggio di successo
-          const successMessage = this.editMode 
-            ? `Ingrediente aggiornato con successo!` 
-            : `Ingrediente creato con ID: ${result.data?.id || result.id}`
-          alert(successMessage)
-        } else {
-          alert(`Errore: ${result.message || 'Errore nel salvataggio'}`)
-        }
+        // Mostra messaggio di successo
+        const successMessage = this.editMode 
+          ? `Ingrediente aggiornato con successo!` 
+          : `Ingrediente creato con ID: ${result.data?.id || result.id}`
+        alert(successMessage)
         
       } catch (error) {
         console.error('Error saving ingredient:', error)
-        alert('Errore di rete: ' + error.message)
+        alert('Errore: ' + error.message)
       }
     },
     
     async deleteIngredient(ingredient) {
       if (confirm(`Sei sicuro di voler eliminare l'ingrediente "${ingredient.name}"?`)) {
         try {
-          const baseUrl = import.meta.env.DEV ? '/api/' : 'https://thisisnotmysite.altervista.org/mymenu/api/'
-          const token = localStorage.getItem('token')
-          const headers = {}
-          
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`
-          }
-          
-          const response = await fetch(`${baseUrl}ingredients/${ingredient.id}`, {
-            method: 'DELETE',
-            headers: headers
-          })
-          
-          if (!response.ok) throw new Error('Network response was not ok')
-          
+          await ingredientsService.delete(ingredient.id)
           await this.loadIngredients()
-          alert('Ingrediente eliminato!')
+          alert('Ingrediente eliminato con successo!')
         } catch (error) {
           console.error('Error deleting ingredient:', error)
-          alert('Errore nell\'eliminazione dell\'ingrediente')
+          alert('Errore: ' + error.message)
         }
       }
     }
   }
 }
 </script>
-<style scoped>
-.ingredients .table th {
-  border-top: none;
-}
 
+<style scoped>
 .btn-group .btn {
   border-radius: 0.375rem;
   margin-right: 2px;
