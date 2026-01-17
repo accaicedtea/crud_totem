@@ -411,40 +411,56 @@ export default {
     
     async saveIngredient() {
       try {
+        // Recupera il token dal localStorage
+        const token = localStorage.getItem('token')
+        
+        if (!token) {
+          alert('Token mancante, devi fare login')
+          return
+        }
+        
+        // Prepara il payload per l'invio
         const payload = {
           ...this.form,
-          price: this.form.price.replace(',', '.')
+          price: this.form.price.toString().replace(',', '.')
         }
         
+        // Determina URL e metodo in base alla modalità (insert o update)
         const baseUrl = import.meta.env.DEV ? '/api/' : 'https://thisisnotmysite.altervista.org/mymenu/api/'
         const url = this.editMode ? `${baseUrl}ingredients/${this.form.id}` : `${baseUrl}ingredients`
+        const method = this.editMode ? 'PUT' : 'POST'
         
-        const token = localStorage.getItem('token')
-        const headers = {
-          'Content-Type': 'application/json'
-        }
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-        
+        // Fai la chiamata con il token nell'header Authorization
         const response = await fetch(url, {
-          method: this.editMode ? 'PUT' : 'POST',
-          headers: headers,
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`  // Importante: Bearer + token
+          },
           body: JSON.stringify(payload)
         })
         
-        if (!response.ok) throw new Error('Network response was not ok')
+        const result = await response.json()
         
-        await this.loadIngredients()
+        if (response.ok) {
+          // Ricarica gli ingredienti
+          await this.loadIngredients()
+          
+          // Chiudi il modal usando l'attributo data-bs-dismiss
+          document.querySelector('#ingredientModal [data-bs-dismiss="modal"]').click()
+          
+          // Mostra messaggio di successo
+          const successMessage = this.editMode 
+            ? `Ingrediente aggiornato con successo!` 
+            : `Ingrediente creato con ID: ${result.data?.id || result.id}`
+          alert(successMessage)
+        } else {
+          alert(`Errore: ${result.message || 'Errore nel salvataggio'}`)
+        }
         
-        // Chiudi il modal usando l'attributo data-bs-dismiss
-        document.querySelector('#ingredientModal [data-bs-dismiss="modal"]').click()
-        
-        alert(this.editMode ? 'Ingrediente aggiornato!' : 'Ingrediente creato!')
       } catch (error) {
         console.error('Error saving ingredient:', error)
-        alert('Errore nel salvataggio dell\'ingrediente')
+        alert('Errore di rete: ' + error.message)
       }
     },
     
