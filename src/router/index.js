@@ -5,8 +5,14 @@ import Ingredients from '../components/Ingredients.vue'
 import Allergens from '../components/Allergens.vue'
 import Categories from '../components/Categories.vue'
 import Products from '../components/Products.vue'
+import Test from '../components/Test.vue'
 const routes = [
- 
+  {
+    path: '/test',
+    name: 'Test',
+    component: Test,
+    meta: { requiresAuth: false }
+  },
    {
     path: '/',
     name: 'Log',

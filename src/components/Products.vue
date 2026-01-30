@@ -116,6 +116,7 @@
                     >
                       <i class="fas fa-info-circle"></i>
                     </button>
+                    <!--
                     <button 
                       class="btn btn-sm btn-outline-warning" 
                       data-bs-toggle="modal" 
@@ -132,6 +133,7 @@
                     >
                       <i class="fas fa-trash"></i>
                     </button>
+                    -->
                   </div>
                 </td>
               </tr>
@@ -384,7 +386,21 @@ export default {
           ingredients: formData.selected_ingredients,
           allergens: formData.selected_allergens
         }
-        
+        // Estrai l'id azienda dal token salvato (assumendo JWT in localStorage)
+        let aziendaId = null
+        const token = localStorage.getItem('token')
+        if (token) {
+          try {
+            const payloadBase64 = token.split('.')[1]
+            const decoded = JSON.parse(atob(payloadBase64))
+            if (decoded.azienda_id) {
+              aziendaId = decoded.azienda_id
+              payload.azienda_id = aziendaId
+            }
+          } catch (e) {
+            console.warn('Impossibile estrarre azienda_id dal token:', e)
+          }
+        }
         if (this.editMode) {
           payload.id = formData.id
         }

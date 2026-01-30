@@ -59,8 +59,9 @@
                 <th class="d-none d-lg-table-cell">Descrizione</th>
                 <th>Prezzo</th>
                 <th class="d-none d-md-table-cell">Unità</th>
-                <th class="d-none d-sm-table-cell">Disponibilità</th>
-                <th>Azioni</th>
+                <th class="d-none d-sm-table-cell">Allergeni</th>
+                <!--Azioni Disabilitate                <th>Azioni</th>-->
+
               </tr>
             </thead>
             <tbody>
@@ -69,7 +70,7 @@
                   <img 
                     v-if="ingredient.image" 
                     :src="ingredient.image" 
-                    :alt="ingredient.name"
+                    :alt="ingredient.ingredient_name"
                     class="ingredient-image"
                   >
                   <span v-else class="text-muted">
@@ -77,7 +78,7 @@
                   </span>
                 </td>
                 <td>
-                  <strong>{{ ingredient.name }}</strong>
+                  <strong>{{ ingredient.ingredient_name }}</strong>
                 </td>
                 <td class="d-none d-lg-table-cell">
                   <div v-if="ingredient.description">{{ ingredient.description }}</div>
@@ -94,12 +95,16 @@
                   </span>
                 </td>
                 <td class="d-none d-sm-table-cell">
-                  <span 
-                    :class="ingredient.is_available ? 'badge bg-success' : 'badge bg-danger'"
-                  >
-                    {{ ingredient.is_available ? 'Disponibile' : 'Non disponibile' }}
-                  </span>
+                  <div>
+                    <span v-if="ingredient.parsed_allergens.length === 0" class="text-muted fst-italic">Nessuno</span>
+                    <span v-else>
+                      <span class="badge bg-warning text-dark me-1 mb-1" v-for="allergen in ingredient.parsed_allergens" :key="allergen.name">
+                        {{ allergen.name }}
+                      </span>
+                    </span>
+                  </div>
                 </td>
+                <!-- Azioni disabilitate per ora
                 <td>
                   <div class="btn-group">
                     <button 
@@ -120,6 +125,7 @@
                     </button>
                   </div>
                 </td>
+                -->
               </tr>
             </tbody>
           </table>
@@ -242,7 +248,8 @@
 
 <script>
 import { ingredientsService } from '../services/ingredientsService'
-
+import { testApi } from '../services/testApi'
+import helpers from '../services/helpers'
 export default {
   name: 'Ingredients',
   data() {
@@ -269,13 +276,15 @@ export default {
   methods: {
     async loadIngredients() {
       this.loading = true
-      
       try {
-        const result = await ingredientsService.getAll()
-        
-        this.ingredients = result.data || []
+        const result = await testApi.v_ingredients_with_allergens()
+        this.ingredients = (result.data || []).map(item => {
+          item = { ...item }
+          item.parsed_allergens = helpers.parseAllergens(item.allergens)
+          return item
+        })
         this.filteredIngredients = this.ingredients
-        console.log('✅ Ingredienti caricati:', this.ingredients.length)
+        console.log('✅ Ingredienti caricati (v_ingredients_with_allergens):', this.ingredients.length)
       } catch (error) {
         console.error('❌ Errore caricamento ingredienti:', error)
         alert('Errore nel caricamento degli ingredienti: ' + error.message)
@@ -356,6 +365,21 @@ export default {
         const payload = {
           ...this.form,
           price: this.form.price.toString().replace(',', '.')
+        }
+        // Estrai l'id azienda dal token salvato (assumendo JWT in localStorage)
+        let aziendaId = null
+        const token = localStorage.getItem('token')
+        if (token) {
+          try {
+            const payloadBase64 = token.split('.')[1]
+            const decoded = JSON.parse(atob(payloadBase64))
+            if (decoded.azienda_id) {
+              aziendaId = decoded.azienda_id
+              payload.azienda_id = aziendaId
+            }
+          } catch (e) {
+            console.warn('Impossibile estrarre azienda_id dal token:', e)
+          }
         }
         
         // Usa il servizio per salvare (crea o aggiorna)

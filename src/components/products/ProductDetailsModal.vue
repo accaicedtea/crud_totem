@@ -11,33 +11,6 @@
         </div>
         <div class="modal-body">
           <div v-if="product">
-            <!-- Info Base -->
-            <div class="card mb-3">
-              <div class="card-header bg-primary text-white">
-                <i class="fas fa-info-circle me-2"></i>Informazioni Generali
-              </div>
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-8">
-                    <p class="mb-2"><strong>Nome:</strong> {{ product.name }}</p>
-                    <p class="mb-2"><strong>Descrizione:</strong> {{ product.description || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Prezzo:</strong> <span class="text-success">€ {{ parseFloat(product.price).toFixed(2) }}</span></p>
-                    <p class="mb-2"><strong>Categoria:</strong> 
-                      <span class="badge bg-info">{{ getCategoryName(product.category_id) || 'N/A' }}</span>
-                    </p>
-                    <p class="mb-0"><strong>Stato:</strong> 
-                      <span :class="product.is_active ? 'badge bg-success' : 'badge bg-danger'">
-                        {{ product.is_active ? 'Attivo' : 'Non attivo' }}
-                      </span>
-                    </p>
-                  </div>
-                  <div class="col-md-4" v-if="product.image">
-                    <img :src="product.image" :alt="product.name" class="img-fluid rounded">
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Ingredienti -->
             <div class="card mb-3">
               <div class="card-header bg-success text-white">

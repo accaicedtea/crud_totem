@@ -1,4 +1,15 @@
 <script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isLoggedIn = ref(!!localStorage.getItem('token'))
+
+function handleLogout() {
+  localStorage.removeItem('token')
+  isLoggedIn.value = false
+  location.reload()
+}
 </script>
 
 <template>
@@ -39,6 +50,15 @@
               <router-link to="/allergens" class="nav-link">
                 <i class="fas fa-exclamation-triangle me-1"></i>
                 Allergeni
+              </router-link>
+            </li>
+            <!-- Pulsante Login/Logout -->
+            <li class="nav-item">
+              <button v-if="isLoggedIn" class="btn btn-outline-light ms-2" @click="handleLogout">
+                Logout
+              </button>
+              <router-link v-else to="/" class="btn btn-outline-light ms-2">
+                Login
               </router-link>
             </li>
           </ul>

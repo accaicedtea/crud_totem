@@ -59,8 +59,9 @@
                 <th class="d-none d-lg-table-cell">Descrizione</th>
                 <th class="d-none d-md-table-cell">Colore</th>
                 <th class="d-none d-sm-table-cell">Ordine</th>
-                <th class="d-none d-sm-table-cell">Stato</th>
+                <!--
                 <th>Azioni</th>
+                -->
               </tr>
             </thead>
             <tbody>
@@ -94,13 +95,7 @@
                     {{ category.sort_order || 0 }}
                   </span>
                 </td>
-                <td class="d-none d-sm-table-cell">
-                  <span 
-                    :class="category.is_active ? 'badge bg-success' : 'badge bg-danger'"
-                  >
-                    {{ category.is_active ? 'Attiva' : 'Non attiva' }}
-                  </span>
-                </td>
+                <!--
                 <td>
                   <div class="btn-group">
                     <button 
@@ -121,6 +116,7 @@
                     </button>
                   </div>
                 </td>
+                -->
               </tr>
             </tbody>
           </table>
@@ -395,7 +391,21 @@ export default {
       try {
         // Prepara il payload per l'invio
         const payload = { ...this.form }
-        
+        // Estrai l'id azienda dal token salvato (assumendo JWT in localStorage)
+        let aziendaId = null
+        const token = localStorage.getItem('token')
+        if (token) {
+          try {
+            const payloadBase64 = token.split('.')[1]
+            const decoded = JSON.parse(atob(payloadBase64))
+            if (decoded.azienda_id) {
+              aziendaId = decoded.azienda_id
+              payload.azienda_id = aziendaId
+            }
+          } catch (e) {
+            console.warn('Impossibile estrarre azienda_id dal token:', e)
+          }
+        }
         // Usa il servizio per salvare (crea o aggiorna)
         const result = await categoriesService.save(payload, this.editMode)
         
